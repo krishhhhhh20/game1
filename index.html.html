@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Number Guessing Game</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e3a8a 60%, #6d28d9);
+    color: #fff;
+    padding: 16px;
+  }
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 28px 24px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  }
+  h1 { font-size: 1.7rem; margin-bottom: 14px; }
+  .rules { opacity: 0.85; line-height: 1.6; margin-bottom: 20px; font-size: 0.95rem; }
+  #attemptLabel { font-weight: 600; margin-bottom: 10px; color: #fbbf24; }
+  .row { display: flex; gap: 8px; }
+  input {
+    flex: 1;
+    padding: 12px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 10px;
+    text-align: center;
+    outline: none;
+  }
+  button {
+    padding: 12px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #fbbf24;
+    color: #1e1b4b;
+  }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  #message { margin: 18px 0 8px; min-height: 52px; font-size: 1.1rem; font-weight: 600; line-height: 1.5; }
+  .low { color: #93c5fd; }
+  .high { color: #fca5a5; }
+  .error { color: #fcd34d; }
+  .win { color: #86efac; }
+  .lose { color: #fda4af; }
+  #restart { display: none; background: #34d399; margin-top: 6px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎯 Number Guessing Game</h1>
+    <p class="rules">
+      Welcome to Number Guessing Game!<br>
+      I have selected a number between 1 and 100.<br>
+      You have 7 attempts to guess it.
+    </p>
+
+    <p id="attemptLabel"></p>
+    <div class="row">
+      <input type="text" id="guess" inputmode="numeric" placeholder="Enter your guess" autocomplete="off" autofocus>
+      <button id="submit">Guess</button>
+    </div>
+
+    <p id="message"></p>
+    <button id="restart">Play Again</button>
+  </div>
+
+<script>
+  const MAX_ATTEMPTS = 7;
+  let number, attempt, finished;
+
+  const input = document.getElementById("guess");
+  const submitBtn = document.getElementById("submit");
+  const msg = document.getElementById("message");
+  const label = document.getElementById("attemptLabel");
+  const restartBtn = document.getElementById("restart");
+
+  function showMessage(text, cls) {
+    msg.innerHTML = text;
+    msg.className = cls || "";
+  }
+
+  function updateLabel() {
+    label.textContent = "Attempt " + attempt + "/" + MAX_ATTEMPTS + " - Enter your guess:";
+  }
+
+  function startGame() {
+    number = Math.floor(Math.random() * 100) + 1;   // same as random.randint(1, 100)
+    attempt = 1;
+    finished = false;
+    input.value = "";
+    input.disabled = false;
+    submitBtn.disabled = false;
+    restartBtn.style.display = "none";
+    showMessage("");
+    updateLabel();
+    input.focus();
+  }
+
+  function endGame() {
+    finished = true;
+    input.disabled = true;
+    submitBtn.disabled = true;
+    restartBtn.style.display = "inline-block";
+  }
+
+  function checkGuess(x, y) {
+    return x === y ? "correct" : (x < y ? "low" : "high");
+  }
+
+  function playTurn() {
+    if (finished) return;
+
+    const raw = input.value.trim();
+    const guess = Number(raw);
+
+    // Invalid input: not a whole number (attempt is NOT used)
+    if (raw === "" || !Number.isInteger(guess)) {
+      showMessage("Please enter a valid number.", "error");
+      input.focus();
+      return;
+    }
+
+    // Out of range (attempt is NOT used)
+    if (guess < 1 || guess > 100) {
+      showMessage("Please enter a number between 1 and 100.", "error");
+      input.focus();
+      return;
+    }
+
+    const result = checkGuess(guess, number);
+
+    if (result === "correct") {
+      showMessage("Congratulations! You guessed the correct number!<br>You guessed it in " + attempt + " attempt(s).", "win");
+      endGame();
+      return;
+    }
+
+    if (result === "low") {
+      showMessage("Too Low! Try a higher number.", "low");
+    } else {
+      showMessage("Too High! Try a lower number.", "high");
+    }
+
+    attempt++;
+    input.value = "";
+
+    if (attempt > MAX_ATTEMPTS) {
+      showMessage("Game Over!<br>The correct number was: " + number, "lose");
+      label.textContent = "";
+      endGame();
+      return;
+    }
+
+    updateLabel();
+    input.focus();
+  }
+
+  submitBtn.addEventListener("click", playTurn);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") playTurn(); });
+  restartBtn.addEventListener("click", startGame);
+
+  startGame();
+</script>
+</body>
+</html>
